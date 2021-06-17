@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hello-glb
+spec:
+  host: glb.ace.ibm-gtmaa.dev
+  port:
+    targetPort: 8080
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: hello-kubernetes
+    weight: 100
+  wildcardPolicy: None

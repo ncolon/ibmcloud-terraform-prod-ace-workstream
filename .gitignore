@@ -1,5 +1,5 @@
 #  Local .terraform directories
-**/.terraform/*
+*/.terraform
 
 
 
@@ -14,19 +14,3 @@
 # Mac stuff
 .DS_Store
 
-# openshift pull-secret
-pull-secret
-
-# local
-makefile
-**/artifacts/*
-**/terraform.state.d/*
-*.log
-
-# installer-files
-**/installer-files/*
-
-# optional files
-extras.tf
-vnet/nat-gateway.tf
-bastion.tf
