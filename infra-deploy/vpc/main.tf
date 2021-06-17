@@ -7,6 +7,11 @@ terraform {
   }
 }
 
+provider "ibm" {
+  region = var.region
+}
+
+
 resource "ibm_is_vpc" "vpc" {
   name           = var.cluster_id
   resource_group = var.resource_group_id

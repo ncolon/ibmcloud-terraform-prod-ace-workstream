@@ -14,39 +14,71 @@ resource "random_string" "id" {
 }
 
 # Configure the IBM Provider
-provider "ibm" {
-  region = var.region
-}
 
 locals {
-  cluster_id = "${var.vpc_resrouce_group_name}-${random_string.id.result}"
+  cluster_id = "${var.cluster_prefix}-${random_string.id.result}"
 }
 
 resource "ibm_resource_group" "rg" {
   name = "${local.cluster_id}-rg"
 }
 
-
-module "vpc" {
-  source            = "./vpc"
-  resource_group_id = ibm_resource_group.rg.id
-  region            = var.region
-  cluster_id        = local.cluster_id
-  vpc_cidr          = var.vpc_cidr
+resource "ibm_resource_group" "glb" {
+  name = "glb-${local.cluster_id}-rg"
 }
 
-module "roks" {
+
+# Terraform Limitation
+# │ Error: Module module.vpc contains provider configuration
+# │
+# │ Providers cannot be configured within modules using count, for_each or depends_on.
+
+
+module "vpc_region1" {
+  source            = "./vpc"
+  resource_group_id = ibm_resource_group.rg.id
+  region            = var.regions[0]
+  cluster_id        = local.cluster_id
+  vpc_cidr          = var.vpc_cidrs[0]
+}
+
+module "vpc_region2" {
+  source            = "./vpc"
+  resource_group_id = ibm_resource_group.rg.id
+  region            = var.regions[1]
+  cluster_id        = local.cluster_id
+  vpc_cidr          = var.vpc_cidrs[1]
+}
+
+
+module "roks_region1" {
   source            = "./roks"
   resource_group_id = ibm_resource_group.rg.id
-  region            = var.region
-  vpc_id            = module.vpc.vpc_id
+  region            = var.regions[0]
+  vpc_id            = module.vpc_region1.vpc_id
   cluster_id        = local.cluster_id
   kube_version      = var.kube_version
   worker_flavor     = var.worker_flavor
   workers_per_zone  = var.workers_per_zone
-  subnet_ids        = module.vpc.subnet_ids
+  subnet_ids        = module.vpc_region1.subnet_ids
 }
 
+module "roks_region2" {
+  source            = "./roks"
+  resource_group_id = ibm_resource_group.rg.id
+  region            = var.regions[1]
+  vpc_id            = module.vpc_region1.vpc_id
+  cluster_id        = local.cluster_id
+  kube_version      = var.kube_version
+  worker_flavor     = var.worker_flavor
+  workers_per_zone  = var.workers_per_zone
+  subnet_ids        = module.vpc_region1.subnet_ids
+}
+
+module "glb" {
+  source            = "./glb"
+  resource_group_id = ibm_resource_group.glb.id
+}
 
 # resource "ibm_is_vpc" "vpc" {
 #   name           = "${var.region}-${random_string.id.result}"
@@ -73,7 +105,7 @@ module "roks" {
 
 # resource "ibm_container_vpc_cluster" "roks" {
 #   name = "roks-${var.region}-${random_string.id.result}"
-#   # name              = "roks-${var.vpc_resrouce_group_name}-${random_string.id.result}"
+#   # name              = "roks-${var.cluster_prefix}-${random_string.id.result}"
 #   kube_version      = "4.6.28_openshift"
 #   vpc_id            = ibm_is_vpc.vpc.id
 #   flavor            = "bx2.16x64"

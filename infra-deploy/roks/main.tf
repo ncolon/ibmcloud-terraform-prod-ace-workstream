@@ -7,6 +7,11 @@ terraform {
   }
 }
 
+provider "ibm" {
+  region = var.region
+}
+
+
 resource "ibm_resource_instance" "cos_instance" {
   name     = "cos-${var.cluster_id}"
   service  = "cloud-object-storage"

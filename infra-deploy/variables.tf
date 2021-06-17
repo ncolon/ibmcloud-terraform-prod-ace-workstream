@@ -1,16 +1,15 @@
-variable "region" {
-  type        = string
+variable "regions" {
+  type        = list(string)
   description = "IBM Cloud Region to deploy into"
 }
 
-variable "vpc_resrouce_group_name" {
+variable "cluster_prefix" {
   type        = string
-  description = "IBM Cloud resource group to deploy VPC"
+  description = "Prefix to use for IBM Cloud resources"
 }
 
-variable "vpc_cidr" {
-  type        = string
-  default     = "10.240.0.0/16"
+variable "vpc_cidrs" {
+  type        = list(string)
   description = "CIDR for IBM Cloud VPC"
 }
 
@@ -34,4 +33,8 @@ variable "workers_per_zone" {
     condition     = var.workers_per_zone > 1
     error_message = "Workers_per_zone must be 2 or greater."
   }
+}
+
+variable "glb_domain" {
+  type = string
 }
